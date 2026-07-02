@@ -82,6 +82,8 @@
         <script src="js/labels.js"></script>
         <script src="js/leaflet.photon.js"></script>
         <script src="js/leaflet.draw.js"></script>
+        <script src="js/leaflet.geometryutil.js"></script>
+        <script src="js/leaflet.snap.js"></script>
         <script src="js/togeojson.js"></script>
         <script src="js/tokml.js"></script>
         <script src="data/House_0.js"></script>
@@ -363,16 +365,30 @@
 			layer.bindPopup(content, { maxHeight: 400 });
         }
 
-        function style_Municipality1_5_0() {
+        // Ward tirichariyan vyatyastha niram (20% transparency fill)
+        var wardColorPalette = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#42d4f4', '#f4a442', '#a442f4', '#42f489', '#f44272'];
+        var wardColorMap = {};
+        var wardColorIndex = 0;
+        function getWardColor(wardName) {
+            var key = wardName || 'unknown';
+            if (!wardColorMap.hasOwnProperty(key)) {
+                wardColorMap[key] = wardColorPalette[wardColorIndex % wardColorPalette.length];
+                wardColorIndex++;
+            }
+            return wardColorMap[key];
+        }
+        function style_Municipality1_5_0(feature) {
+            var wardColor = getWardColor(feature && feature.properties ? feature.properties['Ward_Name'] : null);
             return {
                 pane: 'pane_Municipality1_5',
                 opacity: 1,
-                color: 'rgba(255,127,0,1.0)',
+                color: wardColor,
                 dashArray: '',
                 lineCap: 'butt',
                 lineJoin: 'miter',
                 weight: 3.0, 
-                fillOpacity: 0,
+                fillColor: wardColor,
+                fillOpacity: 0.2,
                 interactive: true,
             }
         }
@@ -466,15 +482,18 @@
         var drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
 
+        // Magnetic snap: puthiya drawing existing layers-inte vertices/lines-il "kuduthu" varakkan
+        var snapGuideLayers = [layer_House_0, layer_River_4, layer_Boundary_3, layer_Municipality1_5, drawnItems];
+
         var drawControl = new L.Control.Draw({
             position: 'topleft',
             draw: {
-                polygon: { shapeOptions: { color: '#e6851a', weight: 3 } },
-                polyline: { shapeOptions: { color: '#e6851a', weight: 3 } },
-                rectangle: { shapeOptions: { color: '#e6851a', weight: 3 } },
+                polygon: { shapeOptions: { color: '#e6851a', weight: 3 }, guideLayers: snapGuideLayers, snapDistance: 20 },
+                polyline: { shapeOptions: { color: '#e6851a', weight: 3 }, guideLayers: snapGuideLayers, snapDistance: 20 },
+                rectangle: { shapeOptions: { color: '#e6851a', weight: 3 }, guideLayers: snapGuideLayers, snapDistance: 20 },
                 circle: { shapeOptions: { color: '#e6851a', weight: 3 } },
                 circlemarker: false,
-                marker: true
+                marker: { guideLayers: snapGuideLayers, snapDistance: 20 }
             },
             edit: {
                 featureGroup: drawnItems,
