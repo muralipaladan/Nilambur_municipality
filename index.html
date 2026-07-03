@@ -377,12 +377,13 @@
             }
             return wardColorMap[key];
         }
+        var wardBoundaryColor = '#FFD700';
         function style_Municipality1_5_0(feature) {
             var wardColor = getWardColor(feature && feature.properties ? feature.properties['Ward_Name'] : null);
             return {
                 pane: 'pane_Municipality1_5',
                 opacity: 1,
-                color: '#FFD700',
+                color: wardBoundaryColor,
                 dashArray: '',
                 lineCap: 'butt',
                 lineJoin: 'miter',
@@ -477,6 +478,20 @@
             position: 'topright',
         });
         lay.addTo(map);
+
+        // Ward boundary colour: gold on Google Hybrid (satellite), blue on Google Road
+        function updateWardBoundaryColor() {
+            if (map.hasLayer(layer_GoogleRoad_2)) {
+                wardBoundaryColor = '#1E88FF';
+            } else if (map.hasLayer(layer_GoogleHybrid_1)) {
+                wardBoundaryColor = '#FFD700';
+            }
+            if (layer_Municipality1_5) {
+                layer_Municipality1_5.setStyle(style_Municipality1_5_0);
+            }
+        }
+        map.on('baselayerchange', updateWardBoundaryColor);
+        updateWardBoundaryColor();
 
         // ---- Drawing tools ----
         var drawnItems = new L.FeatureGroup();
