@@ -378,6 +378,7 @@
             return wardColorMap[key];
         }
         var wardBoundaryColor = '#FFD700';
+        var wardBoundaryColorApplied = false;
         function style_Municipality1_5_0(feature) {
             var wardColor = getWardColor(feature && feature.properties ? feature.properties['Ward_Name'] : null);
             return {
@@ -481,16 +482,21 @@
 
         // Ward boundary colour: gold on Google Hybrid (satellite), blue on Google Road
         function updateWardBoundaryColor() {
+            var newColor = wardBoundaryColor;
             if (map.hasLayer(layer_GoogleRoad_2)) {
-                wardBoundaryColor = '#1E88FF';
+                newColor = '#1E88FF';
             } else if (map.hasLayer(layer_GoogleHybrid_1)) {
-                wardBoundaryColor = '#FFD700';
+                newColor = '#FFD700';
             }
-            if (layer_Municipality1_5) {
-                layer_Municipality1_5.setStyle(style_Municipality1_5_0);
+            if (newColor !== wardBoundaryColor || !wardBoundaryColorApplied) {
+                wardBoundaryColor = newColor;
+                wardBoundaryColorApplied = true;
+                if (layer_Municipality1_5) {
+                    layer_Municipality1_5.setStyle(style_Municipality1_5_0);
+                }
             }
         }
-        map.on('baselayerchange', updateWardBoundaryColor);
+        map.on('baselayerchange layeradd layerremove', updateWardBoundaryColor);
         updateWardBoundaryColor();
 
         // ---- Drawing tools ----
